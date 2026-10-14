@@ -393,9 +393,17 @@
                 Compare baseline scan findings with a post-remediation audit to verify that approved AI fixes resolved the barriers without introducing regressions.
               </p>
             </div>
-            <button type="button" id="btn-run-recheck" class="btn btn-primary">
-              <span aria-hidden="true">🔄</span> Run Recheck Audit
-            </button>
+            <div class="recheck-actions">
+              <button type="button" id="btn-generate-preview" class="btn btn-outline">
+                Generate revised preview
+              </button>
+              <a id="generated-preview-link" class="btn btn-success" target="_blank" rel="noopener" hidden>
+                Open revised preview
+              </a>
+              <button type="button" id="btn-run-recheck" class="btn btn-primary">
+                <span aria-hidden="true">🔄</span> Run Recheck Audit
+              </button>
+            </div>
           </div>
 
           <!-- Diff Comparison Visualizer -->
