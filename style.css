@@ -463,6 +463,17 @@ body {
   margin-bottom: 20px;
 }
 
+.recheck-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+#generated-preview-link[hidden] {
+  display: none;
+}
+
 .header-badge-tag {
   font-size: 0.72rem;
   font-weight: 700;
