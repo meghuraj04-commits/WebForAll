@@ -279,11 +279,11 @@ let issues = JSON.parse(JSON.stringify(currentSectorData.issues)); // Deep clone
 let currentFilter = "all";
 let currentSearch = "";
 let hasRunRecheck = false;
+let lastAuditScore = null;
+let hasLiveScan = false;
 
 // Backend Connectivity State
-const API_BASE_URL = window.location.port === "5000" 
-  ? window.location.origin 
-  : "http://localhost:5000";
+let API_BASE_URL = "http://localhost:5000";
 let isBackendOnline = false;
 
 // DOM Elements
@@ -333,6 +333,8 @@ const issuesList = document.getElementById("issues-list");
 // Recheck Elements
 const btnRunRecheck = document.getElementById("btn-run-recheck");
 const btnRunRecheckQuick = document.getElementById("btn-run-recheck-quick");
+const btnGeneratePreview = document.getElementById("btn-generate-preview");
+const generatedPreviewLink = document.getElementById("generated-preview-link");
 const diffInitialCount = document.getElementById("diff-initial-count");
 const diffInitialScore = document.getElementById("diff-initial-score");
 const diffRemainingCount = document.getElementById("diff-remaining-count");
@@ -386,11 +388,10 @@ function escapeHtml(str) {
  * Calculates health score based on active issues
  */
 function calculateHealthScore() {
-  const unresolvedIssues = issues.filter(i => i.status !== "approved");
-  const crit = unresolvedIssues.filter(i => i.severity === "critical").length;
-  const ser = unresolvedIssues.filter(i => i.severity === "serious").length;
-  const mod = unresolvedIssues.filter(i => i.severity === "moderate").length;
-  const min = unresolvedIssues.filter(i => i.severity === "minor").length;
+  const crit = issues.filter(i => i.severity === "critical").length;
+  const ser = issues.filter(i => i.severity === "serious").length;
+  const mod = issues.filter(i => i.severity === "moderate").length;
+  const min = issues.filter(i => i.severity === "minor").length;
 
   const deductions = (crit * 14) + (ser * 9) + (mod * 5) + (min * 2);
   const score = Math.max(10, Math.min(100, 100 - deductions));
@@ -442,8 +443,11 @@ function updateDashboardState() {
     navPendingCount.classList.add("badge-pending");
   }
 
+  const approvedFixCount = issues.filter(issue => issue.status === "approved").length;
+  btnGeneratePreview.disabled = !hasLiveScan || approvedFixCount === 0;
+
   // Update Health Score
-  const currentScore = calculateHealthScore();
+  const currentScore = Number.isFinite(lastAuditScore) ? lastAuditScore : calculateHealthScore();
   scoreNumber.textContent = currentScore;
   scoreRing.className = "score-ring";
   if (currentScore >= 85) {
@@ -624,6 +628,8 @@ window.handleApproveIssue = function(issueId) {
   }
 
   updateDashboardState();
+  renderIssuesList();
+  generatedPreviewLink.hidden = true;
 };
 
 window.handleRejectIssue = function(issueId) {
@@ -639,6 +645,8 @@ window.handleRejectIssue = function(issueId) {
   }
 
   updateDashboardState();
+  renderIssuesList();
+  generatedPreviewLink.hidden = true;
 };
 
 // ============================================================================
@@ -730,6 +738,9 @@ function switchSector(sectorKey) {
   currentSectorKey = sectorKey;
   currentSectorData = SECTOR_DATASETS[sectorKey];
   issues = JSON.parse(JSON.stringify(currentSectorData.issues)); // Reset clone
+  lastAuditScore = null;
+  hasLiveScan = false;
+  generatedPreviewLink.hidden = true;
   urlInput.value = currentSectorData.defaultUrl;
   sectorHint.textContent = currentSectorData.hint;
   kpiSectorIndicator.textContent = currentSectorData.sectorName;
@@ -752,13 +763,17 @@ function updateClearButton() {
  * Checks if the Node.js Express backend server is online
  */
 async function checkBackendConnectivity() {
-  try {
+  const candidates = [...new Set([window.location.origin, "http://localhost:5000"])]
+    .filter(origin => origin !== "null");
+
+  for (const origin of candidates) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 1500);
-    const res = await fetch(`${API_BASE_URL}/api/health`, { signal: controller.signal });
-    clearTimeout(timeout);
+    try {
+      const res = await fetch(`${origin}/api/health`, { signal: controller.signal });
+      if (!res.ok) continue;
 
-    if (res.ok) {
+      API_BASE_URL = origin;
       isBackendOnline = true;
       const statusPill = document.getElementById("status-pill");
       const statusText = document.getElementById("status-mode-text");
@@ -767,21 +782,29 @@ async function checkBackendConnectivity() {
         statusText.textContent = "🟢 Live Scanner Active";
       }
       announce("Live scanning backend connected.");
+      return;
+    } catch (err) {
+      isBackendOnline = false;
+    } finally {
+      clearTimeout(timeout);
     }
-  } catch (err) {
-    isBackendOnline = false;
   }
+
+  isBackendOnline = false;
 }
 
 /**
  * Routes scanning to either live backend or sector simulation
  */
-function runScanner(targetUrl) {
-  if (isBackendOnline) {
-    runLiveScanner(targetUrl);
-  } else {
-    runSimulatedScanner(targetUrl);
+async function runScanner(targetUrl) {
+  await checkBackendConnectivity();
+  if (!isBackendOnline) {
+    urlError.textContent = "Live scanning is unavailable because the backend is offline. Start the app with npm start, then scan again. No demo score was reported.";
+    urlError.hidden = false;
+    announce("Scan could not start because the live scanning backend is offline.");
+    return;
   }
+  runLiveScanner(targetUrl);
 }
 
 /**
@@ -829,6 +852,9 @@ async function runLiveScanner(targetUrl) {
 
     // Load live violations synthesized with AI fixes
     issues = data.issues || [];
+    lastAuditScore = Number.isFinite(data.score) ? data.score : null;
+    hasLiveScan = true;
+    generatedPreviewLink.hidden = true;
     metaScannedUrl.textContent = targetUrl;
     const now = new Date();
     metaScannedTime.textContent = `Audited ${now.toLocaleTimeString()} • Live Playwright + axe-core`;
@@ -842,9 +868,47 @@ async function runLiveScanner(targetUrl) {
     loadingState.hidden = true;
     scanBtn.disabled = false;
 
-    urlError.textContent = `${error.message} (Falling back to simulated sector audit)`;
+    urlError.textContent = error.message;
     urlError.hidden = false;
-    runSimulatedScanner(targetUrl);
+    announce(`Live scan failed: ${error.message}`);
+  }
+}
+
+async function generateRevisedPreview() {
+  const approvedFixes = issues
+    .filter(issue => issue.status === "approved")
+    .map(issue => ({ selector: issue.element, afterCode: issue.afterCode }));
+
+  if (!hasLiveScan || approvedFixes.length === 0) {
+    urlError.textContent = "Run a live scan and approve at least one fix before generating a revised preview.";
+    urlError.hidden = false;
+    return;
+  }
+
+  btnGeneratePreview.disabled = true;
+  btnGeneratePreview.textContent = "Generating preview...";
+  urlError.hidden = true;
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/revision`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: metaScannedUrl.textContent, fixes: approvedFixes })
+    });
+    const data = await response.json();
+    if (!response.ok || !data.success) throw new Error(data.error || "Preview generation failed.");
+
+    generatedPreviewLink.href = data.previewUrl;
+    generatedPreviewLink.textContent = `Open revised preview (${data.appliedCount} fixes applied)`;
+    generatedPreviewLink.hidden = false;
+    announce(`Revised preview generated with ${data.appliedCount} approved fixes.`);
+  } catch (error) {
+    urlError.textContent = error.message;
+    urlError.hidden = false;
+    announce(`Could not generate revised preview: ${error.message}`);
+  } finally {
+    btnGeneratePreview.disabled = false;
+    btnGeneratePreview.textContent = "Generate revised preview";
+    updateDashboardState();
   }
 }
 
@@ -1026,6 +1090,7 @@ issueSearch.addEventListener("input", (e) => {
 
 btnRunRecheck.addEventListener("click", runRecheckAudit);
 btnRunRecheckQuick.addEventListener("click", runRecheckAudit);
+btnGeneratePreview.addEventListener("click", generateRevisedPreview);
 
 // Mobile Sidebar Toggle
 if (sidebarToggle && sidebar) {
