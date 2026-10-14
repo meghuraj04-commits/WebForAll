@@ -1,1 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <title>AccessAble AI | Website Accessibility Checker</title>
+
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+
+<body>
+
+    <!-- Navigation bar -->
+    <header class="navbar">
+        <a class="logo" href="#" aria-label="AccessAble AI home">
+            <span class="logo-icon" aria-hidden="true">A</span>
+            <span>AccessAble <span class="highlight">AI</span></span>
+        </a>
+
+        <span class="nav-label">Digital Inclusion</span>
+    </header>
+
+    <main>
+        <!-- Hero section -->
+        <section class="hero">
+            <span class="tag">ACCESSIBILITY MADE SIMPLE</span>
+
+            <h1>Make Every Website<br>
+                <span class="highlight">Accessible to Everyone.</span>
+            </h1>
+
+            <p class="intro">
+                Scan a website, discover accessibility issues,
+                understand who is affected, and get suggestions
+                to make the web more inclusive.
+            </p>
+
+            <!-- Website URL form -->
+            <form id="scan-form" class="scan-box">
+                <label for="website-url">Enter website URL</label>
+
+                <input
+                    type="url"
+                    id="website-url"
+                    placeholder="https://example.com"
+                    aria-describedby="url-help"
+                    required
+                >
+
+                <p id="url-help" class="help-text">
+                    Enter the full address of a public webpage.
+                </p>
+
+                <button type="submit" id="scan-button">
+                    Scan Website
+                    <span aria-hidden="true">→</span>
+                </button>
+
+                <p id="status" role="status" aria-live="polite"></p>
+            </form>
+        </section>
+
+        <!-- Features section -->
+        <section class="features">
+            <h2>How AccessAble AI Helps</h2>
+
+            <div class="feature-grid">
+                <article class="feature-card">
+                    <div class="feature-icon" aria-hidden="true">⌕</div>
+                    <h3>Detect Issues</h3>
+                    <p>
+                        Identify common website accessibility
+                        problems.
+                    </p>
+                </article>
+
+                <article class="feature-card">
+                    <div class="feature-icon" aria-hidden="true">♡</div>
+                    <h3>Understand Impact</h3>
+                    <p>
+                        Learn how issues can affect people
+                        with disabilities.
+                    </p>
+                </article>
+
+                <article class="feature-card">
+                    <div class="feature-icon" aria-hidden="true">&lt;/&gt;</div>
+                    <h3>Get Suggested Fixes</h3>
+                    <p>
+                        Give developers practical code examples
+                        to help fix detected issues.
+                    </p>
+                </article>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>AccessAble AI — Scan it. Understand it. Fix it. Include everyone.</p>
+    </footer>
+
+</body>
+</html>
