@@ -1,105 +1,541 @@
 <!DOCTYPE html>
 <html lang="en">
-<link rel="stylesheet" href="style.css">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>AccessAble AI | Website Accessibility Checker</title>
-
-    <link rel="stylesheet" href="style.css">
-    <script src="script.js" defer></script>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="AI Accessibility Guardian — WCAG 2.2 Remediation & Compliance Platform for Banking, Financial Services, and Healthcare Patient Portals.">
+  <title>AI Accessibility Guardian — WCAG 2.2 Compliance Platform</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
+  <!-- Accessible Skip Link for Keyboard Navigation -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
 
-    <!-- Navigation bar -->
-    <header class="navbar">
-        <a class="logo" href="#" aria-label="AccessAble AI home">
-            <span class="logo-icon" aria-hidden="true">A</span>
-            <span>AccessAble <span class="highlight">AI</span></span>
-        </a>
+  <!-- Live Announcer for Screen Readers (ARIA live region) -->
+  <div id="screen-reader-announcer" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
 
-        <span class="nav-label">Digital Inclusion</span>
-    </header>
+  <div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar" class="sidebar" role="navigation" aria-label="Main Navigation">
+      <div class="sidebar-header">
+        <div class="brand-logo" aria-hidden="true">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            <circle cx="12" cy="11" r="3"></circle>
+            <path d="M12 14v4"></path>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1 class="brand-name">AI Guardian</h1>
+          <span class="brand-tag">WCAG 2.2 Suite</span>
+        </div>
+      </div>
 
-    <main>
-        <!-- Hero section -->
-        <section class="hero">
-            <span class="tag">ACCESSIBILITY MADE SIMPLE</span>
+      <!-- Sector Focus Selector -->
+      <div class="sector-selector-wrapper">
+        <label for="sector-select" class="sidebar-section-label">Target Industry Profile</label>
+        <div class="select-wrapper">
+          <select id="sector-select" class="sidebar-select" aria-label="Select target industry compliance profile">
+            <option value="banking" selected>🏦 Banking & Financial Services</option>
+            <option value="healthcare">🏥 Healthcare & Patient Portals</option>
+            <option value="enterprise">🏢 Enterprise SaaS & Portals</option>
+          </select>
+        </div>
+        <p class="sector-hint" id="sector-hint">Auditing against ADA Title III, Section 508, and WCAG 2.2 AA standards.</p>
+      </div>
 
-            <h1>Make Every Website<br>
-                <span class="highlight">Accessible to Everyone.</span>
-            </h1>
+      <!-- Navigation Links -->
+      <nav class="sidebar-nav">
+        <span class="sidebar-section-label">Modules</span>
+        <ul class="nav-list" role="list">
+          <li>
+            <a href="#section-scanner" class="nav-link active" data-nav="scanner">
+              <span class="nav-icon" aria-hidden="true">🔍</span>
+              <span class="nav-text">URL Scanner</span>
+            </a>
+          </li>
+          <li>
+            <a href="#section-dashboard" class="nav-link" data-nav="dashboard">
+              <span class="nav-icon" aria-hidden="true">📊</span>
+              <span class="nav-text">Audit Dashboard</span>
+            </a>
+          </li>
+          <li>
+            <a href="#section-report" class="nav-link" data-nav="report">
+              <span class="nav-icon" aria-hidden="true">📋</span>
+              <span class="nav-text">Accessibility Report</span>
+              <span id="nav-issues-count" class="badge-count" aria-label="6 issues detected">6</span>
+            </a>
+          </li>
+          <li>
+            <a href="#section-fixes" class="nav-link" data-nav="fixes">
+              <span class="nav-icon" aria-hidden="true">🤖</span>
+              <span class="nav-text">AI Remediation</span>
+              <span id="nav-pending-count" class="badge-count badge-pending" aria-label="4 pending approval">4 pending</span>
+            </a>
+          </li>
+          <li>
+            <a href="#section-recheck" class="nav-link" data-nav="recheck">
+              <span class="nav-icon" aria-hidden="true">🔄</span>
+              <span class="nav-text">Recheck & Diff</span>
+            </a>
+          </li>
+          <li>
+            <a href="#section-progress" class="nav-link" data-nav="progress">
+              <span class="nav-icon" aria-hidden="true">📈</span>
+              <span class="nav-text">Progress & Velocity</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
 
-            <p class="intro">
-                Scan a website, discover accessibility issues,
-                understand who is affected, and get suggestions
-                to make the web more inclusive.
-            </p>
+      <!-- Compliance Disclaimer Card -->
+      <div class="sidebar-footer">
+        <div class="compliance-note" role="note">
+          <div class="note-header">
+            <span class="note-icon" aria-hidden="true">⚖️</span>
+            <strong>Compliance Advisory</strong>
+          </div>
+          <p class="note-body">
+            Automated audits identify ~35–40% of WCAG criteria. Full legal compliance requires combined automated analysis and human assistive technology validation.
+          </p>
+        </div>
+      </div>
+    </aside>
 
-            <!-- Website URL form -->
-            <form id="scan-form" class="scan-box">
-                <label for="website-url">Enter website URL</label>
+    <!-- Main Content Area -->
+    <div class="content-wrapper">
+      <!-- Top Header / App Bar -->
+      <header class="app-header" role="banner">
+        <div class="header-left">
+          <button type="button" id="sidebar-toggle" class="btn-icon-only" aria-label="Toggle sidebar navigation" aria-controls="sidebar" aria-expanded="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </button>
+          <div>
+            <h2 class="page-title">AI Accessibility Guardian</h2>
+            <p class="page-subtitle">Automated Detection &bull; AI-Assisted Fixes &bull; Mandatory Human Sign-off</p>
+          </div>
+        </div>
 
-                <input
-                    type="url"
-                    id="website-url"
-                    placeholder="https://example.com"
-                    aria-describedby="url-help"
-                    required
-                >
+        <div class="header-right">
+          <div class="header-pill pill-standard">
+            <span class="pill-dot" aria-hidden="true"></span>
+            <span>WCAG 2.2 Level AA</span>
+          </div>
+          <div id="status-pill" class="header-pill pill-demo">
+            <span class="pill-dot" aria-hidden="true"></span>
+            <span id="status-mode-text">Demo Mode Active</span>
+          </div>
+          <button type="button" id="btn-export-top" class="btn btn-secondary btn-sm" title="Export Audit Summary">
+            <span aria-hidden="true">📥</span> Export Report
+          </button>
+        </div>
+      </header>
 
-                <p id="url-help" class="help-text">
-                    Enter the full address of a public webpage.
-                </p>
+      <!-- Main Scrollable Body -->
+      <main id="main-content" class="main-body" role="main">
+        <!-- Notice Banner -->
+        <aside class="notice-banner" aria-label="System status notification">
+          <div class="notice-icon" aria-hidden="true">💡</div>
+          <div class="notice-content">
+            <strong>Demonstration Mode:</strong> Currently displaying realistic WCAG 2.2 accessibility violations for financial services and healthcare patient portals. Automated fixes require <strong>Human Approval</strong> before adoption.
+          </div>
+        </aside>
 
-                <button type="submit" id="scan-button">
-                    Scan Website
-                    <span aria-hidden="true">→</span>
-                </button>
-
-                <p id="status" role="status" aria-live="polite"></p>
-            </form>
-        </section>
-
-        <!-- Features section -->
-        <section class="features">
-            <h2>How AccessAble AI Helps</h2>
-
-            <div class="feature-grid">
-                <article class="feature-card">
-                    <div class="feature-icon" aria-hidden="true">⌕</div>
-                    <h3>Detect Issues</h3>
-                    <p>
-                        Identify common website accessibility
-                        problems.
-                    </p>
-                </article>
-
-                <article class="feature-card">
-                    <div class="feature-icon" aria-hidden="true">♡</div>
-                    <h3>Understand Impact</h3>
-                    <p>
-                        Learn how issues can affect people
-                        with disabilities.
-                    </p>
-                </article>
-
-                <article class="feature-card">
-                    <div class="feature-icon" aria-hidden="true">&lt;/&gt;</div>
-                    <h3>Get Suggested Fixes</h3>
-                    <p>
-                        Give developers practical code examples
-                        to help fix detected issues.
-                    </p>
-                </article>
+        <!-- SECTION 1: URL Scanner -->
+        <section id="section-scanner" class="card scan-card" aria-labelledby="heading-scanner">
+          <div class="card-header">
+            <div>
+              <h3 id="heading-scanner" class="card-title">Website Accessibility Scanner</h3>
+              <p class="card-subtitle">Scan live web portals against 100+ WCAG 2.2 Level A/AA rules including new cognitive and focus criteria.</p>
             </div>
+            <span class="badge-wcag-version">WCAG 2.2 Standard</span>
+          </div>
+
+          <form id="scanner-form" class="scanner-form" novalidate>
+            <div class="form-group">
+              <label for="url-input" class="form-label">
+                Target Website URL <span class="required" aria-hidden="true">*</span>
+                <span class="sr-only">(required)</span>
+              </label>
+              <div class="input-wrapper">
+                <span class="input-icon" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="2" y1="12" x2="22" y2="12"></line>
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                  </svg>
+                </span>
+                <input 
+                  type="url" 
+                  id="url-input" 
+                  name="url" 
+                  class="url-input" 
+                  placeholder="https://portal.securebank.com" 
+                  value="https://portal.securebank.com/wire-transfer"
+                  autocomplete="url"
+                  spellcheck="false"
+                  aria-describedby="url-hint url-error"
+                  required
+                >
+                <button type="button" id="clear-btn" class="btn-clear" aria-label="Clear input URL" title="Clear input">
+                  &times;
+                </button>
+              </div>
+              <span id="url-hint" class="input-hint">Include full protocol (e.g. https://portal.healthnet.org)</span>
+              <div id="url-error" class="error-message" role="alert" aria-live="polite" hidden></div>
+            </div>
+
+            <!-- Preset Samples for Hackathon Judges -->
+            <div class="preset-section">
+              <span class="preset-label">Test Target Sector Samples:</span>
+              <div class="preset-buttons" role="group" aria-label="Industry sample URLs">
+                <button type="button" class="btn-preset" data-sector="banking" data-url="https://portal.securebank.com/wire-transfer">
+                  🏦 Banking Wire Transfer & Authentication
+                </button>
+                <button type="button" class="btn-preset" data-sector="healthcare" data-url="https://patient.healthportal.org/records-vitals">
+                  🏥 Healthcare Patient Vitals & Records
+                </button>
+                <button type="button" class="btn-preset" data-sector="enterprise" data-url="https://app.financesaas.io/dashboard">
+                  💳 Financial Analytics & Account Settings
+                </button>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" id="scan-btn" class="btn btn-primary btn-lg">
+                <span class="btn-icon" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
+                </span>
+                <span class="btn-text">Scan Website</span>
+              </button>
+
+              <button type="button" id="btn-run-recheck-quick" class="btn btn-outline btn-lg" title="Run Recheck Comparison">
+                <span aria-hidden="true">🔄</span> Recheck & Compare
+              </button>
+            </div>
+          </form>
         </section>
-    </main>
 
-    <footer>
-        <p>AccessAble AI — Scan it. Understand it. Fix it. Include everyone.</p>
-    </footer>
+        <!-- Loading / Progress State -->
+        <section id="loading-state" class="card loading-card" role="status" aria-live="polite" aria-busy="true" hidden>
+          <div class="spinner-container">
+            <div class="spinner" aria-hidden="true"></div>
+          </div>
+          <h3 id="loading-title" class="loading-title">Scanning Website with AI Guardian</h3>
+          <p id="loading-message" class="loading-message">Initializing DOM crawler and headless engine...</p>
+          <div class="progress-bar-container" aria-hidden="true">
+            <div id="progress-bar" class="progress-bar" style="width: 25%;"></div>
+          </div>
+          <div class="loading-steps-grid">
+            <span class="step-item active">1. Fetching DOM</span>
+            <span class="step-item active">2. Checking Contrast</span>
+            <span class="step-item">3. WCAG 2.2 Rules</span>
+            <span class="step-item">4. Synthesizing AI Fixes</span>
+          </div>
+        </section>
 
+        <!-- SECTION 2: Dashboard Overview & Severity KPI Cards -->
+        <section id="section-dashboard" class="dashboard-grid" aria-labelledby="heading-dashboard">
+          <h3 id="heading-dashboard" class="sr-only">Accessibility KPI Metrics</h3>
+
+          <!-- Main Score Gauge Card -->
+          <div class="card score-kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-title">Accessibility Health Score</span>
+              <span class="sector-indicator" id="kpi-sector-indicator">Banking Profile</span>
+            </div>
+            <div class="score-display">
+              <div id="score-ring" class="score-ring ring-moderate" role="img" aria-label="Accessibility score: 62 out of 100">
+                <span id="score-number" class="score-value">62</span>
+                <span class="score-max">/100</span>
+              </div>
+              <div class="score-meta">
+                <div id="score-rating" class="score-rating-badge badge-warning">Remediation Required</div>
+                <p class="score-desc" id="score-desc">
+                  High legal exposure under ADA Title III and Section 508. 6 barriers impede screen reader and keyboard access.
+                </p>
+                <div class="score-benchmark">
+                  <span>Target Benchmark: <strong>95+ (Compliant)</strong></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Human Approval Pipeline KPI Card -->
+          <div class="card approval-kpi-card">
+            <div class="kpi-header">
+              <span class="kpi-title">Human-in-the-Loop Pipeline</span>
+              <span class="badge-pill">Mandatory Sign-off</span>
+            </div>
+            <div class="pipeline-stats">
+              <div class="pipe-stat">
+                <span class="pipe-num text-pending" id="stat-pipe-pending">4</span>
+                <span class="pipe-label">Pending Approval</span>
+              </div>
+              <div class="pipe-stat">
+                <span class="pipe-num text-approved" id="stat-pipe-approved">1</span>
+                <span class="pipe-label">Approved Fixes</span>
+              </div>
+              <div class="pipe-stat">
+                <span class="pipe-num text-rejected" id="stat-pipe-rejected">1</span>
+                <span class="pipe-label">Rejected / Need Work</span>
+              </div>
+            </div>
+            <div class="pipeline-progress-bar-wrapper">
+              <div class="progress-bar-container" aria-hidden="true">
+                <div id="approval-progress-bar" class="progress-bar bar-approval" style="width: 17%;"></div>
+              </div>
+              <span class="progress-caption" id="approval-progress-caption">1 of 6 issues approved by developer (17%)</span>
+            </div>
+          </div>
+
+          <!-- Severity Breakdown 4-Card Region -->
+          <div class="severity-grid" role="region" aria-label="Issue Summary by Severity">
+            <button type="button" class="severity-card card-critical active-filter" data-filter="critical" aria-pressed="false">
+              <div class="sev-head">
+                <span class="sev-dot dot-critical" aria-hidden="true"></span>
+                <span class="sev-name">Critical</span>
+              </div>
+              <div class="sev-count" id="count-critical">2</div>
+              <p class="sev-info">Blocks transactions / access completely</p>
+            </button>
+
+            <button type="button" class="severity-card card-serious" data-filter="serious" aria-pressed="false">
+              <div class="sev-head">
+                <span class="sev-dot dot-serious" aria-hidden="true"></span>
+                <span class="sev-name">Serious</span>
+              </div>
+              <div class="sev-count" id="count-serious">2</div>
+              <p class="sev-info">Severe barrier for assistive technologies</p>
+            </button>
+
+            <button type="button" class="severity-card card-moderate" data-filter="moderate" aria-pressed="false">
+              <div class="sev-head">
+                <span class="sev-dot dot-moderate" aria-hidden="true"></span>
+                <span class="sev-name">Moderate</span>
+              </div>
+              <div class="sev-count" id="count-moderate">1</div>
+              <p class="sev-info">Navigation confusion or high cognitive load</p>
+            </button>
+
+            <button type="button" class="severity-card card-minor" data-filter="minor" aria-pressed="false">
+              <div class="sev-head">
+                <span class="sev-dot dot-minor" aria-hidden="true"></span>
+                <span class="sev-name">Minor</span>
+              </div>
+              <div class="sev-count" id="count-minor">1</div>
+              <p class="sev-info">Technical parsing / optimization issue</p>
+            </button>
+          </div>
+        </section>
+
+        <!-- SECTION 3: Detailed Report & AI Remediation Hub -->
+        <section id="section-report" class="report-section" aria-labelledby="heading-report">
+          <div class="report-header-card card">
+            <div class="report-title-row">
+              <div>
+                <h3 id="heading-report" class="section-heading">Accessibility Findings & AI Remediation Hub</h3>
+                <p class="section-subheading">
+                  Review detected violations with precise WCAG 2.2 citations, affected DOM nodes, and AI-suggested code fixes.
+                </p>
+              </div>
+              <div class="audit-meta-box">
+                <span class="meta-url" id="meta-scanned-url">https://portal.securebank.com/wire-transfer</span>
+                <span class="meta-time" id="meta-scanned-time">Audited just now &bull; WCAG 2.2 AA</span>
+              </div>
+            </div>
+
+            <!-- Filter & Search Toolbar -->
+            <div class="report-toolbar">
+              <div class="toolbar-filters" role="tablist" aria-label="Filter issues by severity or status">
+                <button type="button" role="tab" class="filter-tab active" data-filter="all" aria-selected="true">All (6)</button>
+                <button type="button" role="tab" class="filter-tab" data-filter="critical" aria-selected="false">Critical (2)</button>
+                <button type="button" role="tab" class="filter-tab" data-filter="serious" aria-selected="false">Serious (2)</button>
+                <button type="button" role="tab" class="filter-tab" data-filter="moderate" aria-selected="false">Moderate (1)</button>
+                <button type="button" role="tab" class="filter-tab" data-filter="minor" aria-selected="false">Minor (1)</button>
+                <button type="button" role="tab" class="filter-tab filter-pending" data-filter="pending" aria-selected="false">⏳ Pending (4)</button>
+                <button type="button" role="tab" class="filter-tab filter-approved" data-filter="approved" aria-selected="false">✅ Approved (1)</button>
+              </div>
+
+              <div class="toolbar-search">
+                <input 
+                  type="search" 
+                  id="issue-search" 
+                  class="search-input" 
+                  placeholder="Filter by keyword (e.g. label, contrast, table)..." 
+                  aria-label="Filter accessibility issues by keyword"
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- Dynamic List of Issue Cards with AI Diffs & Human Approval -->
+          <div id="issues-list" class="issues-list" role="feed" aria-busy="false" aria-label="Detected accessibility issues list">
+            <!-- Rendered dynamically by javascript.js -->
+          </div>
+        </section>
+
+        <!-- SECTION 4: Recheck & Scan Comparison -->
+        <section id="section-recheck" class="card recheck-section" aria-labelledby="heading-recheck">
+          <div class="card-header">
+            <div>
+              <div class="header-badge-tag">Verification Engine</div>
+              <h3 id="heading-recheck" class="card-title">Recheck & Differential Comparison</h3>
+              <p class="card-subtitle">
+                Compare baseline scan findings with a post-remediation audit to verify that approved AI fixes resolved the barriers without introducing regressions.
+              </p>
+            </div>
+            <button type="button" id="btn-run-recheck" class="btn btn-primary">
+              <span aria-hidden="true">🔄</span> Run Recheck Audit
+            </button>
+          </div>
+
+          <!-- Diff Comparison Visualizer -->
+          <div class="diff-container" id="diff-container">
+            <div class="diff-summary-row">
+              <div class="diff-metric metric-before">
+                <span class="diff-metric-label">Scan #1 (Baseline)</span>
+                <span class="diff-metric-val" id="diff-initial-count">6 Issues</span>
+                <span class="diff-metric-score" id="diff-initial-score">Health: 62/100</span>
+              </div>
+              <div class="diff-arrow" aria-hidden="true">&rarr;</div>
+              <div class="diff-metric metric-after">
+                <span class="diff-metric-label">Scan #2 (Post-Remediation)</span>
+                <span class="diff-metric-val text-success" id="diff-remaining-count">2 Remaining</span>
+                <span class="diff-metric-score text-success" id="diff-new-score">Health: 88/100 (+26 pts)</span>
+              </div>
+              <div class="diff-metric metric-delta">
+                <span class="diff-metric-label">Remediation Velocity</span>
+                <span class="diff-metric-val text-brand" id="diff-resolved-rate">67% Fixed</span>
+                <span class="diff-metric-score" id="diff-resolved-count">4 of 6 Issues Resolved</span>
+              </div>
+            </div>
+
+            <!-- Comparison Table -->
+            <div class="table-responsive">
+              <table class="diff-table" aria-label="Differential comparison of accessibility issues">
+                <thead>
+                  <tr>
+                    <th scope="col">Status</th>
+                    <th scope="col">Severity</th>
+                    <th scope="col">WCAG Criterion</th>
+                    <th scope="col">Issue Description</th>
+                    <th scope="col">Developer Action</th>
+                  </tr>
+                </thead>
+                <tbody id="diff-table-body">
+                  <!-- Dynamically populated by javascript.js -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 5: Progress & Compliance Velocity -->
+        <section id="section-progress" class="card progress-section" aria-labelledby="heading-progress">
+          <div class="card-header">
+            <div>
+              <div class="header-badge-tag">Executive Summary</div>
+              <h3 id="heading-progress" class="card-title">Compliance Progress & Remediation Velocity</h3>
+              <p class="card-subtitle">
+                Track how many original accessibility barriers were successfully remediated and remaining compliance gaps.
+              </p>
+            </div>
+            <button type="button" id="btn-download-json" class="btn btn-secondary btn-sm">
+              <span aria-hidden="true">💾</span> Download JSON Audit
+            </button>
+          </div>
+
+          <div class="progress-kpi-grid">
+            <div class="kpi-mini-card">
+              <span class="kpi-mini-label">Resolved Issues</span>
+              <span class="kpi-mini-val text-success" id="prog-resolved-count">4</span>
+              <span class="kpi-mini-sub">Approved & validated</span>
+            </div>
+            <div class="kpi-mini-card">
+              <span class="kpi-mini-label">Remaining Issues</span>
+              <span class="kpi-mini-val text-warning" id="prog-remaining-count">2</span>
+              <span class="kpi-mini-sub">Require code adjustments</span>
+            </div>
+            <div class="kpi-mini-card">
+              <span class="kpi-mini-label">Newly Detected</span>
+              <span class="kpi-mini-val text-info" id="prog-new-count">0</span>
+              <span class="kpi-mini-sub">Zero regressions introduced</span>
+            </div>
+            <div class="kpi-mini-card">
+              <span class="kpi-mini-label">Resolution Rate</span>
+              <span class="kpi-mini-val text-brand" id="prog-resolution-pct">67%</span>
+              <span class="kpi-mini-sub">Of original baseline issues</span>
+            </div>
+          </div>
+
+          <!-- WCAG 2.2 Principles Breakdown Progress Bars -->
+          <div class="principles-breakdown">
+            <h4 class="breakdown-title">WCAG 2.2 Core Principles Status</h4>
+            
+            <div class="principle-item">
+              <div class="principle-info">
+                <span class="principle-name">1. Perceivable (Text Alternatives, Contrast, Structure)</span>
+                <span class="principle-pct" id="pct-perceivable">85% Compliant</span>
+              </div>
+              <div class="progress-bar-container" aria-hidden="true">
+                <div class="progress-bar bar-success" style="width: 85%;"></div>
+              </div>
+            </div>
+
+            <div class="principle-item">
+              <div class="principle-info">
+                <span class="principle-name">2. Operable (Keyboard Navigation, Focus Visible, Target Size)</span>
+                <span class="principle-pct" id="pct-operable">78% Compliant</span>
+              </div>
+              <div class="progress-bar-container" aria-hidden="true">
+                <div class="progress-bar bar-brand" style="width: 78%;"></div>
+              </div>
+            </div>
+
+            <div class="principle-item">
+              <div class="principle-info">
+                <span class="principle-name">3. Understandable (Error Identification, Labels, Predictability)</span>
+                <span class="principle-pct" id="pct-understandable">90% Compliant</span>
+              </div>
+              <div class="progress-bar-container" aria-hidden="true">
+                <div class="progress-bar bar-success" style="width: 90%;"></div>
+              </div>
+            </div>
+
+            <div class="principle-item">
+              <div class="principle-info">
+                <span class="principle-name">4. Robust (Parsing, Compatible ARIA, Name/Role/Value)</span>
+                <span class="principle-pct" id="pct-robust">95% Compliant</span>
+              </div>
+              <div class="progress-bar-container" aria-hidden="true">
+                <div class="progress-bar bar-success" style="width: 95%;"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- App Footer -->
+      <footer class="app-footer" role="contentinfo">
+        <div class="footer-container">
+          <p><strong>AI Accessibility Guardian</strong> &mdash; Built for enterprise banking, financial services, and healthcare patient portals.</p>
+          <p class="footer-small">
+            Aligned with <a href="https://www.w3.org/TR/WCAG22/" target="_blank" rel="noopener noreferrer">W3C WCAG 2.2 Guidelines</a> &bull; Keyboard shortcuts: <kbd>Tab</kbd> to navigate &bull; <kbd>Enter</kbd> to execute
+          </p>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <script src="javascript.js"></script>
 </body>
 </html>

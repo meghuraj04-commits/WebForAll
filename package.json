@@ -1,0 +1,25 @@
+{
+  "name": "default-accessibility-scanner",
+  "version": "1.0.0",
+  "description": "WebForAll — Default Accessibility Scanner using Express, Playwright, and axe-core",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "accessibility",
+    "a11y",
+    "wcag",
+    "axe-core",
+    "playwright"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axe-core": "^4.10.2",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "playwright": "^1.49.1"
+  }
+}
