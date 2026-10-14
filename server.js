@@ -11,6 +11,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const { randomUUID } = require('crypto');
 const { chromium } = require('playwright');
 const axeCore = require('axe-core');
 
@@ -21,6 +22,8 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname));
+
+const revisionPreviews = new Map();
 
 // ============================================================================
 // 1. Helper Functions & AI Code Remediation Synthesizer
@@ -209,7 +212,7 @@ app.post('/api/scan', async (req, res) => {
     // Map violations and synthesize AI code fixes
     const issues = (axeResults.violations || []).map((v, index) => {
       const firstNode = (v.nodes && v.nodes[0]) ? v.nodes[0] : null;
-      const selector = (firstNode && firstNode.target) ? firstNode.target.join(' ') : 'Document';
+      const selector = (firstNode && firstNode.target && firstNode.target.length) ? firstNode.target[0] : 'Document';
       const remediation = synthesizeAiRemediation(v, firstNode);
 
       return {
@@ -271,6 +274,99 @@ app.post('/api/scan', async (req, res) => {
       await browser.close().catch(() => {});
     }
   }
+});
+
+/**
+ * POST /api/revision
+ * Creates a local, read-only snapshot with approved HTML fixes applied.
+ */
+app.post('/api/revision', async (req, res) => {
+  const { url, fixes } = req.body;
+
+  if (!url || typeof url !== 'string' || !/^https?:\/\//i.test(url.trim())) {
+    return res.status(400).json({ success: false, error: 'A valid http(s) website URL is required.' });
+  }
+  if (!Array.isArray(fixes) || fixes.length === 0) {
+    return res.status(400).json({ success: false, error: 'Approve at least one fix before generating a preview.' });
+  }
+
+  let browser = null;
+  try {
+    browser = await chromium.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+    });
+    const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+    await page.goto(url.trim(), { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await page.waitForTimeout(500);
+
+    const appliedCount = await page.evaluate((approvedFixes) => {
+      let applied = 0;
+      for (const fix of approvedFixes) {
+        if (!fix || typeof fix.selector !== 'string' || typeof fix.afterCode !== 'string') continue;
+        let target;
+        try {
+          target = document.querySelector(fix.selector);
+        } catch {
+          continue;
+        }
+        if (!target) continue;
+
+        const template = document.createElement('template');
+        template.innerHTML = fix.afterCode;
+        template.content.querySelectorAll('script, iframe, object, embed, base, meta[http-equiv="refresh"]').forEach(node => node.remove());
+        template.content.querySelectorAll('*').forEach(node => {
+          [...node.attributes].forEach(attribute => {
+            if (/^on/i.test(attribute.name) || ((attribute.name === 'href' || attribute.name === 'src') && /^\s*javascript:/i.test(attribute.value))) {
+              node.removeAttribute(attribute.name);
+            }
+          });
+        });
+
+        const replacements = [...template.content.childNodes].filter(node => node.nodeType === Node.ELEMENT_NODE);
+        if (replacements.length === 0) continue;
+        target.replaceWith(...replacements);
+        applied++;
+      }
+
+      document.querySelectorAll('script, iframe, object, embed, base, meta[http-equiv="refresh"]').forEach(node => node.remove());
+      document.querySelectorAll('*').forEach(node => {
+        [...node.attributes].forEach(attribute => {
+          if (/^on/i.test(attribute.name) || ((attribute.name === 'href' || attribute.name === 'src') && /^\s*javascript:/i.test(attribute.value))) {
+            node.removeAttribute(attribute.name);
+          }
+        });
+      });
+      document.querySelectorAll('form').forEach(form => {
+        form.removeAttribute('action');
+      });
+      return applied;
+    }, fixes);
+
+    if (appliedCount === 0) {
+      return res.status(422).json({
+        success: false,
+        error: 'No approved fixes could be applied to matching HTML elements on this page.'
+      });
+    }
+
+    const previewId = randomUUID();
+    revisionPreviews.set(previewId, await page.content());
+    const previewUrl = `${req.protocol}://${req.get('host')}/preview/${previewId}`;
+    return res.json({ success: true, previewUrl, appliedCount });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: `Could not generate preview: ${error.message}` });
+  } finally {
+    if (browser) await browser.close().catch(() => {});
+  }
+});
+
+app.get('/preview/:id', (req, res) => {
+  const html = revisionPreviews.get(req.params.id);
+  if (!html) return res.status(404).send('Preview not found or expired.');
+
+  res.set('Content-Security-Policy', "default-src 'none'; img-src https: data:; style-src 'unsafe-inline' https:; font-src https: data:; connect-src 'none'; frame-src 'none'; object-src 'none'; form-action 'none'; base-uri https:");
+  res.type('html').send(html);
 });
 
 // ============================================================================
